@@ -1,12 +1,19 @@
 import requests
 from pprint import pprint
+from collections import Counter
+import json
+import copy
+import time
+from tqdm import tqdm
+
 
 def get_vk_photo(id, album_id='profile'):
     """
-    Функция получает информацию о фото в виде json, на  вход подаем id пользователя и id альбома
+    Функция получает информацию о фото в виде json, на  вход подаем id пользователя и id альбома, если id альбома не
+    передать, то берем фото профиля
     """
     url_vk = 'https://api.vk.com/method/photos.get'
-    token_vk = 'vk1.a.zRNlJVtMlj4kFnPEbiqxoowK0TtzKUibE2y9CZLgViXR0PYyjGvuSyF_J0nub0bg-r4AOMtkMyNHgQU56LaMc7DQo8LDRwm469soUVb_ZIjFVZvi6MdzSGekPDFsjdETgRg_4NN-5heyNwIxFdnBOuCflDqF_Q0XHrMcY3TeFY2WbE3qAHfKGLk-T6opJQ85'
+    token_vk = ''
     version_api_vk = '5.131'
     vk_id = id
     vk_album_id = album_id
@@ -25,10 +32,13 @@ def get_vk_photo(id, album_id='profile'):
 
 def get_size_photo(photo_dict):
     """
-    Функция выбирает фото наибольшего размера, на вход принимает словарь с фото
+    Функция выбирает фото наибольшего размера
     """
     temp_dict_photo = {}
     necessary_photo = {}
+    necessary_list = []
+    necessary_photo['likes'] = photo_dict['likes']['count']
+    necessary_photo['date'] = photo_dict['date']
     for photo in photo_dict['sizes']:
         temp_dict_photo[photo['type']] = photo['url']
     if 'w' in temp_dict_photo:
@@ -63,11 +73,85 @@ def get_size_photo(photo_dict):
         necessary_photo['url'] = temp_dict_photo['s']
     return necessary_photo
 
+def get_folder(name_folder):
+    """
+    Функция создает попаку куда будем загружать фото, на вход принимаем имя папки
+    """
+    url_ya = 'https://cloud-api.yandex.net/v1/disk/resources'
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'OAuth {ya_token}'
+    }
+    params_ya = {
+        'path': name_folder
+    }
+    response = requests.put(url=url_ya, headers=headers, params=params_ya)
+    return
 
+def upload_photo(list_photo):
+    """
+    Функция загружает фото на яндекс диск
+    """
+    url_ya = 'https://cloud-api.yandex.net/v1/disk/resources/upload'
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'OAuth {ya_token}'
+    }
+    for dict_photo in tqdm(list_photo):
+        params = {
+            'path': f'{folder_name}/{dict_photo["file_name"]}',
+            'url': dict_photo['url']
+        }
+        response = requests.post(url=url_ya, headers=headers, params=params)
+        time.sleep(0.2)
+    return
 
-vk = get_vk_photo('7397173')
+def name_file(number, photo_in_vk):
+    """
+    Функция принимает количество все полученные фото из ВК, возвращает список необходимых для загрузки фото с
+    присовенными именами
+    """
+    photo_list = []
+    count_photo = []
+    while number != 0:
+        photo = get_size_photo(photo_in_vk[number - 1])
+        photo['file_name'] = f'{photo["likes"]}.jpg'
+        photo_list.append(photo)
+        number -= 1
+    for photo_vk in photo_list:
+        count_photo.append(photo_vk['file_name'])
+    count_name_photo = Counter(count_photo)
+    for file, count_number in dict(count_name_photo).items():
+        if count_number == 1:
+            del count_name_photo[file]
+    for photo_dict in photo_list:
+        if photo_dict['file_name'] in count_name_photo:
+            photo_dict['file_name'] = f'{photo_dict["likes"]}{photo_dict["date"]}.jpg'
+    return photo_list
+
+def save_json(save_dict):
+    """
+    Функция сохраняет информация по скопированным файлам в json файл vk_photo.json
+    """
+    temp_dict = copy.deepcopy(save_dict)
+    for final_json in temp_dict:
+        final_json.pop('date')
+        final_json.pop('likes')
+        final_json.pop('url')
+    with open('vk_photo.json', 'w') as write_file:
+        json.dump(temp_dict, write_file, indent=4)
+
+ya_token = ''
+folder_name = 'vk_photo'
+vk = get_vk_photo('7397173', '248721370')
+count = vk['count']
 vk_photo = vk['items']
-pprint(get_size_photo(vk_photo[2]))
-#pprint(vk_photo[2])
-#pprint(name_photo(vk_photo[0]))
-#pprint(vk_photo)
+files = name_file(count, vk_photo)
+get_folder(folder_name)
+upload_photo(files)
+save_json(files)
+
+
+
+
+
