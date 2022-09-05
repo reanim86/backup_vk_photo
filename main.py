@@ -14,7 +14,6 @@ def get_vk_photo(id, album_id='profile'):
     """
     url_vk = 'https://api.vk.com/method/photos.get'
     token_vk = ''
-    version_api_vk = '5.131'
     vk_id = id
     vk_album_id = album_id
     params = {
