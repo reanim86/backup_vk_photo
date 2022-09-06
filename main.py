@@ -5,22 +5,22 @@ import json
 import copy
 import time
 from tqdm import tqdm
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
 
 
-def get_vk_photo(id, album_id='profile'):
+def get_vk_photo(id, token, album_id='profile'):
     """
     Функция получает информацию о фото в виде json, на  вход подаем id пользователя и id альбома, если id альбома не
     передать, то берем фото профиля
     """
     url_vk = 'https://api.vk.com/method/photos.get'
-    token_vk = ''
-    vk_id = id
-    vk_album_id = album_id
+    version_api_vk = '5.131'
     params = {
-        'access_token': token_vk,
+        'access_token': token,
         'v': version_api_vk,
-        'owner_id': vk_id,
-        'album_id': vk_album_id,
+        'owner_id': id,
+        'album_id': album_id,
         'extended': '1',
         'photo_sizes': '1'
 
@@ -87,14 +87,14 @@ def get_folder(name_folder):
     response = requests.put(url=url_ya, headers=headers, params=params_ya)
     return
 
-def upload_photo(list_photo):
+def upload_photo(list_photo, token):
     """
     Функция загружает фото на яндекс диск
     """
     url_ya = 'https://cloud-api.yandex.net/v1/disk/resources/upload'
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': f'OAuth {ya_token}'
+        'Authorization': f'OAuth {token}'
     }
     for dict_photo in tqdm(list_photo):
         params = {
@@ -140,15 +140,35 @@ def save_json(save_dict):
     with open('vk_photo.json', 'w') as write_file:
         json.dump(temp_dict, write_file, indent=4)
 
-ya_token = ''
-folder_name = 'vk_photo'
-vk = get_vk_photo('7397173', '248721370')
-count = vk['count']
-vk_photo = vk['items']
-files = name_file(count, vk_photo)
-get_folder(folder_name)
-upload_photo(files)
-save_json(files)
+def add_folder_google(name_folder='vk_photo'):
+    gauth = GoogleAuth()
+    gauth.LocalWebserverAuth()
+    drive = GoogleDrive(gauth)
+    file_metadata = {
+        'title': name_folder,
+        'mimeType': 'application/vnd.google-apps.folder'
+    }
+
+    # folder = drive.CreateFile(file_metadata)
+    folder = drive.CreateFile({'title': 'vk_photo/test.txt'})
+    folder.Upload()
+
+add_folder_google()
+
+
+
+# ya_token = ''
+# vk_token = ''
+# id_client = '7397173'
+# id_album = '248721370'
+# folder_name = 'vk_photo'
+# vk = get_vk_photo(id_client, vk_token, id_album)
+# count = vk['count']
+# vk_photo = vk['items']
+# files = name_file(count, vk_photo)
+# get_folder(folder_name)
+# upload_photo(files, ya_token)
+# save_json(files)
 
 
 
