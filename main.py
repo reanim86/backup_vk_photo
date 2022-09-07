@@ -144,14 +144,19 @@ def add_folder_google(name_folder='vk_photo'):
     gauth = GoogleAuth()
     gauth.LocalWebserverAuth()
     drive = GoogleDrive(gauth)
-    file_metadata = {
-        'title': name_folder,
-        'mimeType': 'application/vnd.google-apps.folder'
-    }
-
+    # file_metadata = {
+    #     'title': name_folder,
+    #     'mimeType': 'application/vnd.google-apps.folder'
+    # }
+    # list_file = drive.ListFile({'q': "'root' in parents and trashed=false"}).GetList()
+    # for file in list_file:
+    #     if file['title'] == name_folder:
+    #         return list_file
     # folder = drive.CreateFile(file_metadata)
-    folder = drive.CreateFile({'title': 'vk_photo/test.txt'})
-    folder.Upload()
+    # folder.Upload()
+    file1 = drive.CreateFile({"mimeType": "text/csv", "parents": [{"kind": "drive#fileLink", "id": '1RssuhwOellfZultWHwoxPk9Ud4CsrzgS'}]})
+    file1.SetContentFile("vk_photo.json")
+
 
 add_folder_google()
 
