@@ -154,11 +154,13 @@ def add_folder_google(name_folder='vk_photo'):
     #         return list_file
     # folder = drive.CreateFile(file_metadata)
     # folder.Upload()
-    file1 = drive.CreateFile({"mimeType": "text/csv", "parents": [{"kind": "drive#fileLink", "id": '1RssuhwOellfZultWHwoxPk9Ud4CsrzgS'}]})
-    file1.SetContentFile("vk_photo.json")
+    file1 = drive.CreateFile({"mimeType": "image/jpeg", "parents": [{"kind": "drive#fileLink", "id": '1RssuhwOellfZultWHwoxPk9Ud4CsrzgS'}]})
+    file1.SetContentFile("")
+    file1.Upload()
+    return
 
 
-add_folder_google()
+pprint(add_folder_google())
 
 
 
