@@ -141,28 +141,34 @@ def save_json(save_dict):
         json.dump(temp_dict, write_file, indent=4)
 
 def add_folder_google(name_folder='vk_photo'):
+    """
+    Функция создает папку на GoogleDrive в случае ее отсутствия
+    """
     gauth = GoogleAuth()
     gauth.LocalWebserverAuth()
     drive = GoogleDrive(gauth)
-    # file_metadata = {
-    #     'title': name_folder,
-    #     'mimeType': 'application/vnd.google-apps.folder'
-    # }
-    # list_file = drive.ListFile({'q': "'root' in parents and trashed=false"}).GetList()
-    # for file in list_file:
-    #     if file['title'] == name_folder:
-    #         return list_file
-    # folder = drive.CreateFile(file_metadata)
-    # folder.Upload()
-    file1 = drive.CreateFile({"mimeType": "image/jpeg", "parents": [{"kind": "drive#fileLink", "id": '1RssuhwOellfZultWHwoxPk9Ud4CsrzgS'}]})
-    file1.SetContentFile("")
-    file1.Upload()
+    file_metadata = {
+        'title': name_folder,
+        'mimeType': 'application/vnd.google-apps.folder'
+    }
+    list_file = drive.ListFile({'q': "'root' in parents and trashed=false"}).GetList()
+    for file in list_file:
+        if file['title'] == name_folder:
+            return
+    folder = drive.CreateFile(file_metadata)
+    folder.Upload()
     return
 
+def download_photo(link_photo, name_photo):
+    photo = requests.get(link_photo)
+    with open(name_photo, 'wb') as f:
+        f.write(photo.content)
+        f.close()
 
-pprint(add_folder_google())
-
-
+# add_folder_google()
+# file1 = drive.CreateFile({'mimeType': 'application/json', 'parents': [{'kind': 'drive#fileLink', 'id': '1RssuhwOellfZultWHwoxPk9Ud4CsrzgS'}]})
+# file1.SetContentFile('vk_photo.json')
+# file1.Upload()
 
 # ya_token = ''
 # vk_token = ''
