@@ -11,8 +11,8 @@ from pydrive.drive import GoogleDrive
 
 def get_vk_photo(id, token, album_id='profile'):
     """
-    Функция получает информацию о фото в виде json, на  вход подаем id пользователя и id альбома, если id альбома не
-    передать, то берем фото профиля
+    Функция возвращает информацию о фото в виде словаря, на  вход подаем id пользователя и id альбома, если id альбома
+    не передать, то берем фото профиля
     """
     url_vk = 'https://api.vk.com/method/photos.get'
     version_api_vk = '5.131'
@@ -72,7 +72,7 @@ def get_size_photo(photo_dict):
         necessary_photo['url'] = temp_dict_photo['s']
     return necessary_photo
 
-def get_folder(name_folder):
+def get_folder(name_folder='vk_photo'):
     """
     Функция создает попаку куда будем загружать фото, на вход принимаем имя папки
     """
@@ -87,7 +87,7 @@ def get_folder(name_folder):
     response = requests.put(url=url_ya, headers=headers, params=params_ya)
     return
 
-def upload_photo(list_photo, token):
+def upload_photo(list_photo, token, folder='vk_photo'):
     """
     Функция загружает фото на яндекс диск
     """
@@ -98,7 +98,7 @@ def upload_photo(list_photo, token):
     }
     for dict_photo in tqdm(list_photo):
         params = {
-            'path': f'{folder_name}/{dict_photo["file_name"]}',
+            'path': f'{folder}/{dict_photo["file_name"]}',
             'url': dict_photo['url']
         }
         response = requests.post(url=url_ya, headers=headers, params=params)
@@ -107,7 +107,7 @@ def upload_photo(list_photo, token):
 
 def name_file(number, photo_in_vk):
     """
-    Функция принимает количество все полученные фото из ВК, возвращает список необходимых для загрузки фото с
+    Функция принимает количество всех полученные фото из ВК, возвращает список необходимых для загрузки фото с
     присовенными именами
     """
     photo_list = []
@@ -159,29 +159,57 @@ def add_folder_google(name_folder='vk_photo'):
     folder.Upload()
     return
 
-def download_photo(link_photo, name_photo):
-    photo = requests.get(link_photo)
-    with open(name_photo, 'wb') as f:
-        f.write(photo.content)
-        f.close()
+def download_photo(photo_list):
+    """
+    Функция загружает фото из ВК на ПК
+    """
+    for photo_to_download in tqdm(photo_list):
+        photo = requests.get(photo_to_download['url'])
+        with open(f'./temp_photo/{photo_to_download["file_name"]}', 'wb') as f:
+            f.write(photo.content)
+            f.close()
 
-# add_folder_google()
-# file1 = drive.CreateFile({'mimeType': 'application/json', 'parents': [{'kind': 'drive#fileLink', 'id': '1RssuhwOellfZultWHwoxPk9Ud4CsrzgS'}]})
-# file1.SetContentFile('vk_photo.json')
-# file1.Upload()
+def upload_photo_google(photo_list, name_dir='vk_photo'):
+    """
+    Функция загружает фото на GoogleDrive из директории temp_photo, при этом фалы не перезаписываются
+    """
+    gauth = GoogleAuth()
+    gauth.LocalWebserverAuth()
+    drive = GoogleDrive(gauth)
+    list_file = drive.ListFile({'q': "'root' in parents and trashed=false"}).GetList()
+    id_dir = ''
+    for file in list_file:
+        if file['title'] == name_dir:
+            id_dir = file['id']
+    for photo in tqdm(photo_list):
+        file_upload = drive.CreateFile(
+            {
+                'title': photo['file_name'],
+                'mimeType': 'image/jpeg',
+                'parents': [{'kind': 'drive#fileLink', 'id': id_dir}]
+            }
+        )
+        file_upload.SetContentFile(f'./temp_photo/{photo["file_name"]}')
+        file_upload.Upload()
+    return
 
-# ya_token = ''
-# vk_token = ''
-# id_client = '7397173'
-# id_album = '248721370'
-# folder_name = 'vk_photo'
-# vk = get_vk_photo(id_client, vk_token, id_album)
-# count = vk['count']
-# vk_photo = vk['items']
-# files = name_file(count, vk_photo)
-# get_folder(folder_name)
-# upload_photo(files, ya_token)
-# save_json(files)
+if __name__ == '__main__':
+    ya_token = ''
+    vk_token = ''
+    id_client = ''
+    id_album = ''
+    folder_name = 'photo_vk'
+    vk = get_vk_photo(id_client, vk_token)
+    count = vk['count']
+    vk_photo = vk['items']
+    files = name_file(count, vk_photo)
+    download_photo(files)
+    add_folder_google(folder_name)
+    time.sleep(1)
+    get_folder(folder_name)
+    upload_photo(files, ya_token, folder_name)
+    upload_photo_google(files, folder_name)
+    save_json(files)
 
 
 
