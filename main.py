@@ -1,5 +1,4 @@
 import requests
-from pprint import pprint
 from collections import Counter
 import json
 import copy
@@ -7,6 +6,8 @@ import time
 from tqdm import tqdm
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
+import configparser
+from pprint import pprint
 
 
 def get_vk_photo(id, token, album_id='profile'):
@@ -208,7 +209,12 @@ def get_user_id(screen_name, token):
     id = response.json()
     return id['response']['object_id']
 
-vk_token = 'vk1.a.zRNlJVtMlj4kFnPEbiqxoowK0TtzKUibE2y9CZLgViXR0PYyjGvuSyF_J0nub0bg-r4AOMtkMyNHgQU56LaMc7DQo8LDRwm469soUVb_ZIjFVZvi6MdzSGekPDFsjdETgRg_4NN-5heyNwIxFdnBOuCflDqF_Q0XHrMcY3TeFY2WbE3qAHfKGLk-T6opJQ85'
+config = configparser.ConfigParser()
+config.read('token.ini')
+
+
+vk_token = config['UserID']['vk_token']
+
 id_client = input('Введите id пользователя VK, сли есть только короткое имя, нажмите Enter и введите его в ледующем окне ')
 user_name = input('Введите короткое имя пользователя ')
 if len(id_client) != 0:
@@ -224,6 +230,7 @@ if user_number_photo <= count:
 else:
     files = name_file(count, vk_photo)
 pprint(files)
+
 
 
 
