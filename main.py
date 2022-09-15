@@ -35,7 +35,6 @@ def get_size_photo(photo_dict):
     """
     temp_dict_photo = {}
     necessary_photo = {}
-    necessary_list = []
     necessary_photo['likes'] = photo_dict['likes']['count']
     necessary_photo['date'] = photo_dict['date']
     for photo in photo_dict['sizes']:
@@ -107,7 +106,7 @@ def upload_photo(list_photo, token, folder='vk_photo'):
 
 def name_file(number, photo_in_vk):
     """
-    Функция принимает количество всех полученные фото из ВК, возвращает список необходимых для загрузки фото с
+    Функция принимает количество фото полученных из ВК, возвращает список необходимых для загрузки фото с
     присовенными именами
     """
     photo_list = []
@@ -193,23 +192,53 @@ def upload_photo_google(photo_list, name_dir='vk_photo'):
         file_upload.Upload()
     return
 
-if __name__ == '__main__':
-    ya_token = ''
-    vk_token = ''
-    id_client = ''
-    id_album = ''
-    folder_name = 'photo_vk'
+def get_user_id(screen_name, token):
+    """
+    Функция получает короткое имя пользователя ВК, вовзращает id этого пользователя
+    """
+    url_vk = 'https://api.vk.com/method/utils.resolveScreenName'
+    version_api_vk = '5.131'
+    params = {
+        'access_token': token,
+        'v': version_api_vk,
+        'screen_name': screen_name
+
+    }
+    response = requests.get(url=url_vk, params=params)
+    id = response.json()
+    return id['response']['object_id']
+
+vk_token = 'vk1.a.zRNlJVtMlj4kFnPEbiqxoowK0TtzKUibE2y9CZLgViXR0PYyjGvuSyF_J0nub0bg-r4AOMtkMyNHgQU56LaMc7DQo8LDRwm469soUVb_ZIjFVZvi6MdzSGekPDFsjdETgRg_4NN-5heyNwIxFdnBOuCflDqF_Q0XHrMcY3TeFY2WbE3qAHfKGLk-T6opJQ85'
+id_client = input('Введите id пользователя VK, сли есть только короткое имя, нажмите Enter и введите его в ледующем окне ')
+user_name = input('Введите короткое имя пользователя ')
+if len(id_client) != 0:
     vk = get_vk_photo(id_client, vk_token)
-    count = vk['count']
-    vk_photo = vk['items']
+else:
+    id_client = get_user_id(user_name, vk_token)
+    vk = get_vk_photo(id_client, vk_token)
+count = vk['count']
+vk_photo = vk['items']
+user_number_photo = int(input('Введите количество фото которые хотите загрузить '))
+if user_number_photo <= count:
+    files = name_file(user_number_photo, vk_photo)
+else:
     files = name_file(count, vk_photo)
-    download_photo(files)
-    add_folder_google(folder_name)
-    time.sleep(1)
-    get_folder(folder_name)
-    upload_photo(files, ya_token, folder_name)
-    upload_photo_google(files, folder_name)
-    save_json(files)
+pprint(files)
+
+
+
+# if __name__ == '__main__':
+    # ya_token = ''
+    # id_client = ''
+    # id_album = ''
+    # folder_name = 'photo_vk'
+    # download_photo(files)
+    # add_folder_google(folder_name)
+    # time.sleep(1)
+    # get_folder(folder_name)
+    # upload_photo(files, ya_token, folder_name)
+    # upload_photo_google(files, folder_name)
+    # save_json(files)
 
 
 
