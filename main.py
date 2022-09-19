@@ -160,16 +160,6 @@ def add_folder_google(name_folder='vk_photo'):
     folder.Upload()
     return
 
-# def download_photo(photo_list):
-#     """
-#     Функция загружает фото из ВК на ПК
-#     """
-#     for photo_to_download in tqdm(photo_list):
-#         photo = requests.get(photo_to_download['url'])
-#         with open(f'./temp_photo/{photo_to_download["file_name"]}', 'wb') as f:
-#             f.write(photo.content)
-#             f.close()
-
 def upload_photo_google(photo_list, name_dir='vk_photo'):
     """
     Функция загружает фото на GoogleDrive из директории temp_photo, при этом фалы не перезаписываются
@@ -201,30 +191,6 @@ def upload_photo_google(photo_list, name_dir='vk_photo'):
         time.sleep(0.5)
     return
 
-# def upload_photo_url():
-#     gauth = GoogleAuth()
-#     gauth.LocalWebserverAuth()
-#
-#     url = 'https://sun9-23.userapi.com/c10765/u13089910/125350693/y_06dbce43.jpg'
-#     filename = '1.jpg'  # Please set the filename.
-#     folder_id = 'root'  # Please set the folder ID. If 'root' is used, the uploaded file is put to the root folder.
-#
-#     access_token = gauth.attr['credentials'].access_token
-#     metadata = {
-#         'name': filename,
-#         'parents': [folder_id]
-#     }
-#     files = {
-#         'data': ('metadata', json.dumps(metadata), 'application/json'),
-#         'file': io.BytesIO(requests.get(url).content)
-#     }
-#     r = requests.post(
-#         "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
-#         headers={"Authorization": "Bearer " + access_token},
-#         files=files
-#     )
-#     return
-
 def get_user_id(screen_name, token):
     """
     Функция получает короткое имя пользователя ВК, вовзращает id этого пользователя
@@ -247,17 +213,17 @@ if __name__ == '__main__':
     config.read('token.ini')
     vk_token = config['UserID']['vk_token']
     ya_token = config['UserID']['ya_token']
-    id_album = '248721370'
+    id_album = ''
     folder_name = 'photo_vk'
     add_folder_google(folder_name)
     get_folder(folder_name)
     id_client = input('Введите id пользователя VK, сли есть только короткое имя, нажмите Enter и введите его в ледующем окне ')
     user_name = input('Введите короткое имя пользователя ')
     if len(id_client) != 0:
-        vk = get_vk_photo(id_client, vk_token, id_album)
+        vk = get_vk_photo(id_client, vk_token)
     else:
         id_client = get_user_id(user_name, vk_token)
-        vk = get_vk_photo(id_client, vk_token, id_album)
+        vk = get_vk_photo(id_client, vk_token)
     count = vk['count']
     vk_photo = vk['items']
     user_number_photo = int(input('Введите количество фото которые хотите загрузить '))
@@ -268,13 +234,6 @@ if __name__ == '__main__':
     upload_photo(files, ya_token, folder_name)
     upload_photo_google(files, folder_name)
     save_json(files)
-
-
-
-# if __name__ == '__main__':
-    # download_photo(files)
-    # upload_photo(files, ya_token, folder_name)
-    # save_json(files)
 
 
 
